@@ -7,8 +7,8 @@ from .predictor import Predictor
 from .config import mobilenetv1_ssd_config as config
 
 
-def create_mobilenetv1_ssd(num_classes, is_test=False):
-    base_net = MobileNetV1(1001).model  # disable dropout layer
+def create_mobilenetv1_ssd(num_classes, alpha=1.0, is_test=False):
+    base_net = MobileNetV1(1001, alpha).model  # disable dropout layer
 
     source_layer_indexes = [
         12,
@@ -16,7 +16,7 @@ def create_mobilenetv1_ssd(num_classes, is_test=False):
     ]
     extras = ModuleList([
         Sequential(
-            Conv2d(in_channels=1024, out_channels=256, kernel_size=1),
+            Conv2d(in_channels=int(1024*alpha), out_channels=256, kernel_size=1),
             ReLU(),
             Conv2d(in_channels=256, out_channels=512, kernel_size=3, stride=2, padding=1),
             ReLU()
@@ -43,7 +43,7 @@ def create_mobilenetv1_ssd(num_classes, is_test=False):
 
     regression_headers = ModuleList([
         Conv2d(in_channels=512, out_channels=6 * 4, kernel_size=3, padding=1),
-        Conv2d(in_channels=1024, out_channels=6 * 4, kernel_size=3, padding=1),
+        Conv2d(in_channels=int(1024*alpha), out_channels=6 * 4, kernel_size=3, padding=1),
         Conv2d(in_channels=512, out_channels=6 * 4, kernel_size=3, padding=1),
         Conv2d(in_channels=256, out_channels=6 * 4, kernel_size=3, padding=1),
         Conv2d(in_channels=256, out_channels=6 * 4, kernel_size=3, padding=1),
@@ -52,7 +52,7 @@ def create_mobilenetv1_ssd(num_classes, is_test=False):
 
     classification_headers = ModuleList([
         Conv2d(in_channels=512, out_channels=6 * num_classes, kernel_size=3, padding=1),
-        Conv2d(in_channels=1024, out_channels=6 * num_classes, kernel_size=3, padding=1),
+        Conv2d(in_channels=int(1024*alpha), out_channels=6 * num_classes, kernel_size=3, padding=1),
         Conv2d(in_channels=512, out_channels=6 * num_classes, kernel_size=3, padding=1),
         Conv2d(in_channels=256, out_channels=6 * num_classes, kernel_size=3, padding=1),
         Conv2d(in_channels=256, out_channels=6 * num_classes, kernel_size=3, padding=1),

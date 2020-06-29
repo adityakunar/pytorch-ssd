@@ -31,6 +31,9 @@ parser.add_argument("--iou_threshold", type=float, default=0.5, help="The thresh
 parser.add_argument("--eval_dir", default="eval_results", type=str, help="The directory to store evaluation results.")
 parser.add_argument('--mb2_width_mult', default=1.0, type=float,
                     help='Width Multiplifier for MobilenetV2')
+parser.add_argument('--mb1_width_mult', default=1.0, type=float,
+                    help='Width Multiplifier for MobilenetV1')
+
 args = parser.parse_args()
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() and args.use_cuda else "cpu")
 
@@ -134,7 +137,7 @@ if __name__ == '__main__':
     if args.net == 'vgg16-ssd':
         net = create_vgg_ssd(len(class_names), is_test=True)
     elif args.net == 'mb1-ssd':
-        net = create_mobilenetv1_ssd(len(class_names), is_test=True)
+        net = create_mobilenetv1_ssd(len(class_names), alpha=args.mb1_width_mult, is_test=True)
     elif args.net == 'mb1-ssd-lite':
         net = create_mobilenetv1_ssd_lite(len(class_names), is_test=True)
     elif args.net == 'sq-ssd-lite':

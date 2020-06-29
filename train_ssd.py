@@ -45,6 +45,9 @@ parser.add_argument('--freeze_net', action='store_true',
 parser.add_argument('--mb2_width_mult', default=1.0, type=float,
                     help='Width Multiplifier for MobilenetV2')
 
+parser.add_argument('--mb1_width_mult', default=1.0, type=float,
+                    help='Width Multiplifier for MobilenetV1')
+
 # Params for SGD
 parser.add_argument('--lr', '--learning-rate', default=1e-3, type=float,
                     help='initial learning rate')
@@ -175,7 +178,8 @@ if __name__ == '__main__':
         create_net = create_vgg_ssd
         config = vgg_ssd_config
     elif args.net == 'mb1-ssd':
-        create_net = create_mobilenetv1_ssd
+        create_net = lambda num: create_mobilenetv1_ssd(num, alpha=args.mb1_width_mult)
+        # create_net = create_mobilenetv1_ssd
         config = mobilenetv1_ssd_config
     elif args.net == 'mb1-ssd-lite':
         create_net = create_mobilenetv1_ssd_lite
