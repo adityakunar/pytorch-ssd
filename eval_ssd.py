@@ -168,15 +168,23 @@ if __name__ == '__main__':
         parser.print_help(sys.stderr)
         sys.exit(1)
 
+    LTs=[]
+    PTs=[]
+    ITs=[]
     results = []
     for i in range(len(dataset)):
         print("process image", i)
         timer.start("Load Image")
         image = dataset.get_image(i)
-        print("Load Image: {:4f} seconds.".format(timer.end("Load Image")))
+        LT=timer.end("Load Image")
+        LTs.append(LT)
+        print("Load Image: {:4f} seconds.".format(LT))
         timer.start("Predict")
-        boxes, labels, probs = predictor.predict(image)
-        print("Prediction: {:4f} seconds.".format(timer.end("Predict")))
+        IT,boxes, labels, probs = predictor.predict(image)
+        PT = timer.end("Predict")
+        ITs.append(IT)
+        PTs.append(PT)
+        print("Prediction: {:4f} seconds.".format(PT))
         indexes = torch.ones(labels.size(0), 1, dtype=torch.float32) * i
         results.append(torch.cat([
             indexes.reshape(-1, 1),
@@ -215,6 +223,6 @@ if __name__ == '__main__':
         print(f"{class_name}: {ap}")
 
     print(f"\nAverage Precision Across All Classes:{sum(aps)/len(aps)}")
-
-
-
+    print(f"\nAverage Loading Time:{sum(LTs)/len(LTs)}")
+    print(f"\nAverage Inference Time:{sum(ITs)/len(ITs)}")
+    print(f"\nAverage Prediction Time:{sum(PTs)/len(PTs)}")
