@@ -179,7 +179,7 @@ def assign_priors(gt_boxes, gt_labels, corner_form_priors,
     return boxes, labels
 
 
-def hard_negative_mining(loss, labels, neg_pos_ratio):
+def hard_negative_mining(loss, labels, neg_pos_ratio,keepHNM=True):
     """
     It used to suppress the presence of a large number of negative prediction.
     It works on image level not batch level.
@@ -195,8 +195,10 @@ def hard_negative_mining(loss, labels, neg_pos_ratio):
     """
     pos_mask = labels > 0
     num_pos = pos_mask.long().sum(dim=1, keepdim=True)
-    num_neg = num_pos * neg_pos_ratio
-
+    if keepHNM==True:
+        num_neg = neg_pos_ratio*num_pos
+    else: 
+        num_neg = len(labels)-num_pos
     loss[pos_mask] = -math.inf
     _, indexes = loss.sort(dim=1, descending=True)
     _, orders = indexes.sort(dim=1)

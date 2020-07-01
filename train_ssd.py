@@ -99,6 +99,11 @@ parser.add_argument('--use_cuda', default=True, type=str2bool,
 parser.add_argument('--checkpoint_folder', default='models/',
                     help='Directory for saving checkpoint models')
 
+parser.add_argument('--Data_Augmentation', default=True, type=bool,
+                    help='Whether data augmentation should be used.')
+
+parser.add_argument('--keep_HNM', default=True, type=bool,
+                    help='Whether negative hard mining should be used.')
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -181,6 +186,7 @@ if __name__ == '__main__':
         create_net = lambda num: create_mobilenetv1_ssd(num, alpha=args.mb1_width_mult)
         # create_net = create_mobilenetv1_ssd
         config = mobilenetv1_ssd_config
+        config = mobilenetv1_ssd_config
     elif args.net == 'mb1-ssd-lite':
         create_net = create_mobilenetv1_ssd_lite
         config = mobilenetv1_ssd_config
@@ -194,7 +200,8 @@ if __name__ == '__main__':
         logging.fatal("The net type is wrong.")
         parser.print_help(sys.stderr)
         sys.exit(1)
-    train_transform = TrainAugmentation(config.image_size, config.image_mean, config.image_std)
+
+    train_transform = TrainAugmentation(config.image_size, config.image_mean, config.image_std,args.Data_Augmentation)
     target_transform = MatchPrior(config.priors, config.center_variance,
                                   config.size_variance, 0.5)
 
@@ -297,7 +304,7 @@ if __name__ == '__main__':
     net.to(DEVICE)
 
     criterion = MultiboxLoss(config.priors, iou_threshold=0.5, neg_pos_ratio=3,
-                             center_variance=0.1, size_variance=0.2, device=DEVICE)
+                             center_variance=0.1, size_variance=0.2, device=DEVICE,args.keepHNM)
     optimizer = torch.optim.SGD(params, lr=args.lr, momentum=args.momentum,
                                 weight_decay=args.weight_decay)
     logging.info(f"Learning rate: {args.lr}, Base net learning rate: {base_net_lr}, "
@@ -319,14 +326,10 @@ if __name__ == '__main__':
     logging.info(f"Start training from epoch {last_epoch + 1}.")
     for epoch in range(last_epoch + 1, args.num_epochs):
         scheduler.step()
-        timer1 = Timer()
-        timer1.start("Iteration Time")
-
-        train(train_loader, net, criterion, optimizer,
+        timer.start("Iteration Time")
+		train(train_loader, net, criterion, optimizer,
               device=DEVICE, debug_steps=args.debug_steps, epoch=epoch)
-
-        logging.info(f'Took {timer1.end("Iteration Time"):.2f} seconds to do 1 Epoch.')
-
+        logging.info(f'Took {"Iteration Time":.2f} seconds to load the model.')
         if epoch % args.validation_epochs == 0 or epoch == args.num_epochs - 1:
             val_loss, val_regression_loss, val_classification_loss = test(val_loader, net, criterion, DEVICE)
             logging.info(
@@ -338,3 +341,4 @@ if __name__ == '__main__':
             model_path = os.path.join(args.checkpoint_folder, f"{args.net}-Epoch-{epoch}-Loss-{val_loss}.pth")
             net.save(model_path)
             logging.info(f"Saved model {model_path}")
+

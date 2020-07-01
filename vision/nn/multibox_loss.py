@@ -8,7 +8,7 @@ from ..utils import box_utils
 
 class MultiboxLoss(nn.Module):
     def __init__(self, priors, iou_threshold, neg_pos_ratio,
-                 center_variance, size_variance, device):
+                 center_variance, size_variance, device,keepHNM):
         """Implement SSD Multibox Loss.
 
         Basically, Multibox loss combines classification loss
@@ -20,6 +20,7 @@ class MultiboxLoss(nn.Module):
         self.center_variance = center_variance
         self.size_variance = size_variance
         self.priors = priors
+        self.keepHNM=keepHNM
         self.priors.to(device)
 
     def forward(self, confidence, predicted_locations, labels, gt_locations):
@@ -35,7 +36,7 @@ class MultiboxLoss(nn.Module):
         with torch.no_grad():
             # derived from cross_entropy=sum(log(p))
             loss = -F.log_softmax(confidence, dim=2)[:, :, 0]
-            mask = box_utils.hard_negative_mining(loss, labels, self.neg_pos_ratio)
+            mask = box_utils.hard_negative_mining(loss, labels, self.neg_pos_ratio,self.keepHNM)
 
         confidence = confidence[mask, :]
         classification_loss = F.cross_entropy(confidence.reshape(-1, num_classes), labels[mask], size_average=False)
